@@ -4,45 +4,16 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/",
-      "dest": "index.html"
-    },
-    {
-      "src": "/upload",
-      "dest": "server.js"
-    },
-    {
-      "src": "/f/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "src": "/progress/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "src": "/health",
-      "dest": "server.js"
-    },
-    {
-      "src": "/config",
+      "src": "/(.*)",
       "dest": "server.js"
     }
   ],
   "env": {
     "TTL_MINUTES": "10",
     "MAX_FILE_MB": "6"
-  },
-  "functions": {
-    "server.js": {
-      "maxDuration": 30
-    }
   }
 }

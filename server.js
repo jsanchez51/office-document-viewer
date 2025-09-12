@@ -132,7 +132,12 @@ app.get("/f/:id", (req, res) => {
   return res.end(chunk);
 });
 
-// Servir estático opcionalmente (para abrir http://localhost:3000/)
+// Servir el archivo index.html en la ruta raíz
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Servir estáticos
 app.use(express.static(process.cwd(), { fallthrough: true }));
 
 // Limpieza periódica de expirados (cada 2 minutos)
