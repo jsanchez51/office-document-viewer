@@ -589,6 +589,22 @@
     async function handleFile(file) {
       currentFile = file;
       const name = file.name.toLowerCase();
+      
+      // Validaciones adicionales
+      if (file.size > 6 * 1024 * 1024) {
+        return unsupported("Archivo demasiado grande. Máximo 6MB. Intenta comprimir el documento desde Word/Excel.");
+      }
+      
+      // Verificar nombre de archivo problemático
+      const problematicChars = /[<>:"/\\|?*\x00-\x1f]/;
+      if (problematicChars.test(file.name)) {
+        console.warn("Archivo con caracteres especiales, será renombrado automáticamente");
+      }
+      
+      if (file.name.length > 100) {
+        console.warn("Nombre de archivo muy largo, será truncado automáticamente");
+      }
+      
       if (name.endsWith(".docx")) return renderDocx(file);
       if (name.endsWith(".xlsx")) return renderXlsx(file);
       if (name.endsWith(".doc")) return unsupported(".doc (Word antiguo) no es compatible en modo 100% navegador. Convierte a .docx.");

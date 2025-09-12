@@ -29,6 +29,30 @@ const inMemoryStats = new Map();
 // CORS para poder subir desde file:// o desde distintos orígenes
 app.use(cors({ origin: true }));
 
+// Función para sanitizar nombres de archivo
+function sanitizeFilename(filename) {
+  if (!filename) return "archivo";
+  
+  // Remover caracteres problemáticos para URLs y sistemas de archivos
+  let sanitized = filename
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '') // Caracteres prohibidos
+    .replace(/\s+/g, '_') // Espacios -> guiones bajos
+    .replace(/[^\w\-_.]/g, '') // Solo alfanuméricos, guiones, puntos
+    .replace(/_{2,}/g, '_') // Múltiples guiones bajos -> uno solo
+    .replace(/^[._]+|[._]+$/g, ''); // Remover puntos/guiones al inicio/final
+  
+  // Limitar longitud manteniendo la extensión
+  const maxLength = 100;
+  if (sanitized.length > maxLength) {
+    const ext = path.extname(sanitized);
+    const name = path.basename(sanitized, ext);
+    const truncatedName = name.substring(0, maxLength - ext.length - 3) + '...';
+    sanitized = truncatedName + ext;
+  }
+  
+  return sanitized || "archivo";
+}
+
 // Salud y config
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.get("/config", (_req, res) => res.json({ PUBLIC_BASE_URL, TTL_MINUTES, MAX_FILE_MB }));
@@ -52,7 +76,9 @@ app.post("/upload", upload.single("file"), (req, res) => {
     if (req.file.size > MAX_BYTES) return res.status(413).json({ error: "file_too_large", maxMb: MAX_FILE_MB });
 
     const id = crypto.randomUUID();
-    const filename = req.file.originalname || "archivo";
+    const originalFilename = req.file.originalname || "archivo";
+    // Sanitizar nombre de archivo: remover caracteres problemáticos y limitar longitud
+    const filename = sanitizeFilename(originalFilename);
     const mime = req.file.mimetype || guessMimeByExt(filename);
     const expireAt = Date.now() + TTL_MINUTES * 60 * 1000;
 
@@ -95,7 +121,10 @@ app.get("/f/:id", (req, res) => {
   res.setHeader("Accept-Ranges", "bytes");
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Content-Type", file.mime);
-  res.setHeader("Content-Disposition", `inline; filename="${safeFilename(file.filename)}"`);
+  
+  // Mejorar el header Content-Disposition para nombres con espacios/caracteres especiales
+  const safeName = encodeURIComponent(file.filename);
+  res.setHeader("Content-Disposition", `inline; filename*=UTF-8''${safeName}`);
 
   const range = req.headers.range;
   if (!range) {
