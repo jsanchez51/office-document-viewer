@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visor DOCX/XLSX (100% navegador)</title>
+  
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4613382667340695" crossorigin="anonymous"></script>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3CXKT7RD56"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3CXKT7RD56');
+  </script>
+
+  <style>
+    :root { --bg:#0b1220; --panel:#121a2b; --text:#e6eef9; --muted:#90a4c7; --accent:#5aa9ff; --ok:#2ecc71; --warn:#ffb020; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background:var(--bg); color:var(--text); }
+    header { padding:16px 24px; background:linear-gradient(180deg, #0d172c 0%, #0b1220 100%); border-bottom:1px solid #1b2740; }
+    header h1 { margin:0; font-size:18px; font-weight:600; }
+    header p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+    main { padding:20px; max-width:1200px; margin:0 auto; }
+
+    .uploader { background:var(--panel); border:1px dashed #2a3a63; border-radius:12px; padding:20px; display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .uploader .left { display:flex; align-items:center; gap:14px; }
+    .uploader input[type="file"] { display:none; }
+    .uploader-label { display:inline-flex; align-items:center; gap:10px; padding:10px 14px; background:#0e1730; border:1px solid #294072; color:var(--text); border-radius:10px; cursor:pointer; font-weight:600; }
+    .uploader-hint { color:var(--muted); font-size:12px; }
+    .types { font-size:12px; color:var(--muted); }
+
+    .dropzone { margin-top:14px; background:#0e1730; border:1px dashed #294072; border-radius:10px; padding:16px; text-align:center; color:var(--muted); }
+
+    .tabs { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; }
+    .tab { background:#0e1730; border:1px solid #294072; padding:6px 10px; border-radius:8px; cursor:pointer; color:var(--muted); }
+    .tab.active { color:var(--text); border-color:var(--accent); box-shadow:0 0 0 1px rgba(90,169,255,.2) inset; }
+
+    .viewer { margin-top:16px; background:var(--panel); border:1px solid #1b2740; border-radius:12px; padding:18px; min-height:50vh; overflow:auto; }
+    .viewer h2 { margin:0 0 10px; font-size:14px; color:var(--muted); font-weight:600; }
+    .docx-html { color:#111; background:#fff; padding:24px; border-radius:8px; box-shadow:0 1px 0 rgba(0,0,0,.04); }
+    .docx-html p { margin:0 0 8px; }
+    .docx-html img { max-width:100%; height:auto; }
+
+    .viewer-tools { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+    .viewer-tools small { color:var(--muted); }
+
+    .progress { background:#0e1730; border:1px solid #294072; border-radius:8px; padding:10px; margin:8px 0; }
+    .progress-bar { width:100%; height:8px; background:#0a1327; border:1px solid #294072; border-radius:999px; overflow:hidden; }
+    .progress-bar > div { height:100%; width:0%; background:linear-gradient(90deg, #3b82f6, #22d3ee); transition:width .15s ease; }
+    .progress-meta { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:6px; }
+
+    .sheet-controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+    select, button { background:#0e1730; color:var(--text); border:1px solid #294072; border-radius:8px; padding:8px 10px; }
+    button.primary { border-color:var(--accent); }
+
+    .footer { margin-top:20px; color:var(--muted); font-size:12px; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#0e1730; border:1px solid #294072; margin-left:8px; }
+
+    /* Espacios publicitarios */
+    .ad-banner { background:var(--panel); border:1px solid #1b2740; border-radius:8px; padding:10px; margin:10px 0; text-align:center; }
+    .ad-banner.top { margin-bottom:20px; }
+    .ad-banner.bottom { margin-top:20px; }
+    .ad-sidebar { position:fixed; right:10px; top:50%; transform:translateY(-50%); width:160px; z-index:1000; }
+    .ad-sidebar .ad-banner { margin:10px 0; }
+    
+    @media (max-width: 1400px) { .ad-sidebar { display:none; } }
+    @media (max-width: 768px) { .ad-banner { margin:5px 0; padding:8px; } }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docx-preview@0.3.4/dist/docx-preview.css">
+</head>
+<body>
+  <header>
+    <h1>Visor de Word y Excel</h1>
+    <p>Los archivos se mantienen solo en memoria del servidor, por tiempo limitado.</p>
+  </header>
+  <main>
+    <!-- Banner publicitario superior -->
+    <div class="ad-banner top">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-4613382667340695"
+           data-ad-slot="1234567890"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
+
+    <section class="uploader">
+      <div class="left">
+        <label class="uploader-label" for="file-input">Seleccionar archivo</label>
+        <input id="file-input" type="file" accept=".docx,.xlsx,.xls,.doc" />
+        <div class="types">Formatos: .docx, .xlsx (mejor soporte). También .doc y .xls (limitado).</div>
+      </div>
+      <div class="right">
+        <span class="uploader-hint">O arrastra y suelta aquí abajo</span>
+      </div>
+    </section>
+
+    <div id="dropzone" class="dropzone">Suelta aquí tu archivo para visualizarlo</div>
+
+    <div id="tabs" class="tabs" style="display:none;"></div>
+
+    <section id="viewer" class="viewer" style="display:none;"></section>
+
+    <!-- Banner publicitario inferior -->
+    <div class="ad-banner bottom">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-4613382667340695"
+           data-ad-slot="0987654321"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
+
+    <div class="footer">
+      Privacidad: el archivo se procesa en memoria, en tu navegador <span class="badge">sin subirlo</span>.
+      <br><small>Este sitio utiliza cookies y publicidad para mantener el servicio gratuito. <a href="#" style="color:var(--accent);">Política de privacidad</a></small>
+    </div>
+  </main>
+
+  <!-- Sidebar publicitario (solo desktop) -->
+  <div class="ad-sidebar">
+    <div class="ad-banner">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-4613382667340695"
+           data-ad-slot="1122334455"
+           data-ad-format="vertical"></ins>
+    </div>
+    <div class="ad-banner">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-4613382667340695"
+           data-ad-slot="5544332211"
+           data-ad-format="vertical"></ins>
+    </div>
+  </div>
+
+  <!-- Librerías por CDN: (opcional) SheetJS si deseas fallback local para XLSX -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    const fileInput = document.getElementById("file-input");
+    const dropzone = document.getElementById("dropzone");
+    const tabs = document.getElementById("tabs");
+    const viewer = document.getElementById("viewer");
+
+    let currentFile = null;
+
+    function show(el) { el.style.display = "block"; }
+    function hide(el) { el.style.display = "none"; }
+
+    function setViewerContent(html) {
+      viewer.innerHTML = `<div class=\"viewer-tools\"><button id=\"copy-btn\" class=\"primary\">Copiar visible</button><small>Selecciona y copia o usa el botón</small></div><div id=\"viewer-content\">${html}</div>`;
+      const btn = document.getElementById("copy-btn");
+      btn?.addEventListener("click", copyVisible);
+      show(viewer);
+    }
+
+    function clearTabs() { tabs.innerHTML = ""; hide(tabs); }
+
+    function createTab(text, active, onClick) {
+      const btn = document.createElement("button");
+      btn.className = "tab" + (active ? " active" : "");
+      btn.textContent = text;
+      btn.addEventListener("click", onClick);
+      tabs.appendChild(btn);
+    }
+
+    function bytesToArrayBuffer(buffer) {
+      return buffer instanceof ArrayBuffer ? buffer : buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+    }
+
+    async function renderDocx(file) {
+      clearTabs();
+      setViewerContent(`<h2>Documento Word (.docx)</h2><div style="color:#90a4c7">Subiendo documento…</div>`);
+      const { viewerUrl, error, maxMb, id } = await uploadEphemeral(file);
+      if (error || !viewerUrl) {
+        console.error("upload/docx error", { error, maxMb });
+        const msg = error === "file_too_large" ? `Archivo demasiado grande. Máximo ${maxMb} MB` : "No se pudo subir el archivo (ver consola).";
+        return unsupported(msg);
+      }
+      setViewerContent(`<h2>Documento Word (.docx)</h2><div class="progress"><div class="progress-bar"><div id="dl-fill"></div></div><div class="progress-meta"><span id="dl-perc">0%</span><span id="dl-eta">Preparando descarga…</span></div></div><iframe id="office-frame" style="width:100%;height:75vh;border:0;" src="${viewerUrl}"></iframe>`);
+      trackDeliveryProgress(id);
+      const frame = document.getElementById('office-frame');
+      frame?.addEventListener('load', () => {
+        const prog = document.querySelector('.progress');
+        const eta = document.getElementById('dl-eta');
+        if (eta) eta.textContent = 'Listo';
+        if (prog) prog.style.display = 'none';
+      }, { once: true });
+    }
+
+    async function renderXlsx(file) {
+      // Para máxima fidelidad, usar también Office Viewer
+      setViewerContent(`<h2>Libro de Excel (.xlsx)</h2><div style="color:#90a4c7">Subiendo libro…</div>`);
+      const up = await uploadEphemeral(file);
+      if (!up.error && up.viewerUrl) {
+        clearTabs();
+        setViewerContent(`<h2>Libro de Excel (.xlsx)</h2><div class="progress"><div class="progress-bar"><div id="dl-fill"></div></div><div class="progress-meta"><span id="dl-perc">0%</span><span id="dl-eta">Preparando descarga…</span></div></div><iframe id="office-frame" style="width:100%;height:75vh;border:0;" src="${up.viewerUrl}"></iframe>`);
+        trackDeliveryProgress(up.id);
+        const frame = document.getElementById('office-frame');
+        frame?.addEventListener('load', () => {
+          const prog = document.querySelector('.progress');
+          const eta = document.getElementById('dl-eta');
+          if (eta) eta.textContent = 'Listo';
+          if (prog) prog.style.display = 'none';
+        }, { once: true });
+        return;
+      }
+      console.error("upload/xlsx error", up);
+      // Fallback local si falla la subida
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const sheetNames = workbook.SheetNames || [];
+      const hiddenIndex = {};
+      const wbSheets = (workbook.Workbook && workbook.Workbook.Sheets) || [];
+      wbSheets.forEach((s, i) => { hiddenIndex[sheetNames[i]] = !!s.Hidden; });
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function buildSheetTable(sheet) {
+        const ref = sheet["!ref"]; if (!ref) return `<div style="color:#ffb4a3;">La hoja no tiene rango válido</div>`;
+        const range = XLSX.utils.decode_range(ref);
+        const merges = sheet["!merges"] || [];
+        const skip = new Set();
+        const key = (r,c) => r + ":" + c;
+        merges.forEach(m => {
+          for (let r = m.s.r; r <= m.e.r; r++) {
+            for (let c = m.s.c; c <= m.e.c; c++) {
+              if (r === m.s.r && c === m.s.c) continue;
+              skip.add(key(r,c));
+            }
+          }
+        });
+
+        let html = "<table><tbody>";
+        for (let r = range.s.r; r <= range.e.r; r++) {
+          html += "<tr>";
+          for (let c = range.s.c; c <= range.e.c; c++) {
+            if (skip.has(key(r,c))) continue;
+            const addr = XLSX.utils.encode_cell({ r, c });
+            const cell = sheet[addr];
+            let text = "";
+            if (cell) {
+              text = cell.w != null ? cell.w : (cell.v != null ? String(cell.v) : "");
+            }
+            let attrs = "";
+            const m = merges.find(m => m.s.r === r && m.s.c === c);
+            if (m) {
+              const rs = m.e.r - m.s.r + 1;
+              const cs = m.e.c - m.s.c + 1;
+              if (rs > 1) attrs += ` rowspan=\"${rs}\"`;
+              if (cs > 1) attrs += ` colspan=\"${cs}\"`;
+            }
+            const tips = [];
+            if (cell && cell.f) tips.push("Fórmula: =" + cell.f);
+            if (cell && Array.isArray(cell.c) && cell.c.length) {
+              const cm = cell.c.map(o => (o.t || o.value || "").trim()).filter(Boolean).join(" | ");
+              if (cm) tips.push("Comentarios: " + cm);
+            }
+            if (tips.length) attrs += ` title=\"${escapeHtml(tips.join("\n"))}\"`;
+            html += `<td${attrs}>${escapeHtml(text)}</td>`;
+          }
+          html += "</tr>";
+        }
+        html += "</tbody></table>";
+        return html;
+      }
+
+      tabs.innerHTML = "";
+      sheetNames.forEach((name, idx) => {
+        const label = name + (hiddenIndex[name] ? " (oculta)" : "");
+        createTab(label, idx === 0, () => renderSheet(idx));
+      });
+      if (sheetNames.length > 0) show(tabs);
+
+      function renderSheet(index) {
+        const sheetName = sheetNames[index];
+        const sheet = workbook.Sheets[sheetName];
+        const htmlTable = buildSheetTable(sheet);
+        setViewerContent(`<h2>Hoja: ${escapeHtml(sheetName)}</h2>` + htmlTable);
+        const tables = viewer.querySelectorAll("table");
+        tables.forEach(t => {
+          t.style.background = "#fff";
+          t.style.color = "#111";
+          t.style.borderCollapse = "collapse";
+          t.style.tableLayout = "fixed";
+          t.style.width = "100%";
+        });
+        const tds = viewer.querySelectorAll("td, th");
+        tds.forEach(cell => {
+          cell.style.border = "1px solid #e5e7eb";
+          cell.style.padding = "4px 6px";
+          cell.style.wordBreak = "break-word";
+        });
+      }
+
+      if (sheetNames.length) renderSheet(0);
+    }
+
+    // Sondeo del progreso de entrega al visor (desde nuestro servidor al Office Viewer)
+    function trackDeliveryProgress(id) {
+      if (!id) return;
+      const base = (window.__PUBLIC_BASE_URL || location.origin).replace(/\/$/, "");
+      const fill = document.getElementById('dl-fill');
+      const percEl = document.getElementById('dl-perc');
+      const etaEl = document.getElementById('dl-eta');
+      if (!fill || !percEl || !etaEl) return;
+      let finishedByFrame = false;
+      let currentDisplayPercent = 0;
+      let targetPercent = 0;
+      const startTime = Date.now();
+      const frame = document.getElementById('office-frame');
+      
+      // Timeout de seguridad: si después de 20s no carga, forzar 100%
+      const safetyTimeout = setTimeout(() => {
+        if (!finishedByFrame) {
+          console.warn('Office Viewer tardó más de 20s, forzando completado');
+          finishedByFrame = true;
+          currentDisplayPercent = 100;
+          fill.style.width = '100%';
+          percEl.textContent = '100%';
+          etaEl.textContent = 'Cargado (timeout)';
+          setTimeout(() => { const prog = document.querySelector('.progress'); if (prog) prog.style.display = 'none'; }, 1000);
+        }
+      }, 20000);
+      
+      // Detectar cuando el iframe carga
+      const onFrameReady = () => {
+        if (finishedByFrame) return;
+        console.log('Office iframe loaded after', Date.now() - startTime, 'ms');
+        finishedByFrame = true;
+        clearTimeout(safetyTimeout);
+        targetPercent = 100;
+        
+        // Notificar a la barra de upload si aún está activa
+        window.uploadOfficeFrameLoaded = true;
+        
+        // Animación rápida al 100%
+        const finalAnim = setInterval(() => {
+          if (currentDisplayPercent < 100) {
+            currentDisplayPercent = Math.min(100, currentDisplayPercent + 2);
+            fill.style.width = currentDisplayPercent + '%';
+            percEl.textContent = currentDisplayPercent + '%';
+          } else {
+            clearInterval(finalAnim);
+            etaEl.textContent = 'Listo';
+            setTimeout(() => { const prog = document.querySelector('.progress'); if (prog) prog.style.display = 'none'; }, 300);
+          }
+        }, 50);
+      };
+      
+      frame?.addEventListener('load', onFrameReady, { once: true });
+      
+      // Animación suave de la barra
+      const animateProgress = setInterval(() => {
+        if (finishedByFrame && currentDisplayPercent >= 100) {
+          console.log('Progress animation finished at 100%');
+          clearInterval(animateProgress);
+          return;
+        }
+        
+        if (currentDisplayPercent < targetPercent) {
+          // Velocidad variable: más lento cerca del objetivo
+          const diff = targetPercent - currentDisplayPercent;
+          let increment;
+          if (currentDisplayPercent >= 85) {
+            increment = 0.2; // muy lento en los últimos %
+            console.log(`Progress slow mode: ${currentDisplayPercent.toFixed(1)}% -> target: ${targetPercent}%`);
+          } else if (currentDisplayPercent >= 70) {
+            increment = 0.5; // lento
+            console.log(`Progress medium mode: ${currentDisplayPercent.toFixed(1)}% -> target: ${targetPercent}%`);
+          } else {
+            increment = 1; // normal
+          }
+          
+          const oldPercent = currentDisplayPercent;
+          currentDisplayPercent = Math.min(targetPercent, currentDisplayPercent + increment);
+          fill.style.width = currentDisplayPercent + '%';
+          percEl.textContent = Math.floor(currentDisplayPercent) + '%';
+          
+          if (Math.floor(oldPercent) !== Math.floor(currentDisplayPercent)) {
+            console.log(`Progress updated: ${Math.floor(currentDisplayPercent)}% (target: ${targetPercent}%)`);
+          }
+        }
+      }, 100);
+      
+      const timer = setInterval(async () => {
+        if (finishedByFrame) { 
+          console.log('Progress timer stopped - frame finished');
+          clearInterval(timer); 
+          return; 
+        }
+        try {
+          const res = await fetch(`${base}/progress/${id}`);
+          if (!res.ok) throw new Error('http ' + res.status);
+          const { size, bytesSent, etaSec } = await res.json();
+          let p = size > 0 ? Math.round((bytesSent / size) * 100) : 0;
+          
+          console.log(`Server progress: ${p}% (${bytesSent}/${size} bytes)`);
+          
+          const oldTarget = targetPercent;
+          // Actualizar objetivo, pero nunca pasar de 95% hasta que frame esté listo
+          if (p >= 100 && !finishedByFrame) {
+            targetPercent = 95;
+            etaEl.textContent = 'Abriendo visor…';
+            console.log('Server download complete, waiting for Office to load...');
+          } else if (p >= 90 && !finishedByFrame) {
+            targetPercent = Math.min(p, 95);
+            etaEl.textContent = 'Procesando…';
+          } else {
+            targetPercent = Math.min(p, 95);
+            etaEl.textContent = (etaSec && etaSec > 0) ? `~${etaSec}s restantes` : 'Descargando…';
+          }
+          
+          if (oldTarget !== targetPercent) {
+            console.log(`Target updated: ${oldTarget}% -> ${targetPercent}%`);
+          }
+        } catch (e) {
+          console.error('Progress fetch error:', e);
+          clearInterval(timer);
+        }
+      }, 800);
+    }
+
+    async function uploadEphemeral(file) {
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        const base = (window.__PUBLIC_BASE_URL || location.origin).replace(/\/$/, "");
+        const url = base + "/upload";
+        console.log("POST", url, file.name, file.type, file.size);
+
+        // Crear UI de progreso
+        const container = document.createElement("div");
+        container.className = "progress";
+        container.innerHTML = `
+          <div class="progress-bar"><div id="pb-fill"></div></div>
+          <div class="progress-meta">
+            <span id="pb-perc">0%</span>
+            <span id="pb-eta">Calculando tiempo…</span>
+          </div>`;
+        const host = document.getElementById("viewer-content") || viewer;
+        host.prepend(container);
+        const fill = container.querySelector('#pb-fill');
+        const percEl = container.querySelector('#pb-perc');
+        const etaEl = container.querySelector('#pb-eta');
+
+        const startTs = Date.now();
+        let lastLoaded = 0;
+
+        // Variables para animación sincronizada
+        let uploadCurrentPercent = 0;
+        let uploadTargetPercent = 0;
+        let uploadServerComplete = false;
+        let officeFrameLoaded = false;
+        
+        // Escuchar cuando Office cargue (variable global)
+        const waitForOfficeLoad = () => {
+          const checkOfficeLoad = setInterval(() => {
+            if (window.uploadOfficeFrameLoaded) {
+              officeFrameLoaded = true;
+              clearInterval(checkOfficeLoad);
+              console.log('Office detected as loaded, accelerating upload progress');
+              return;
+            }
+          }, 200);
+        };
+        waitForOfficeLoad();
+        
+        // Animación suave para la subida inicial
+        const uploadAnimator = setInterval(() => {
+          if (uploadCurrentPercent < uploadTargetPercent) {
+            let increment;
+            
+            if (uploadServerComplete && !officeFrameLoaded) {
+              // Servidor terminó pero Office no cargó: muy muy lento
+              increment = 0.02;
+              console.log(`Upload progress animated (waiting Office): ${uploadCurrentPercent.toFixed(1)}% (target: ${uploadTargetPercent}%)`);
+            } else if (officeFrameLoaded) {
+              // Office cargó: acelerar al 100%
+              increment = 5;
+              console.log(`Upload progress animated (Office loaded): ${Math.floor(uploadCurrentPercent)}% (target: ${uploadTargetPercent}%)`);
+            } else if (uploadCurrentPercent >= 85) {
+              increment = 0.1; // lento cerca del final
+            } else if (uploadCurrentPercent >= 70) {
+              increment = 0.5; // medio
+            } else {
+              increment = 1.5; // rápido al inicio
+            }
+            
+            uploadCurrentPercent = Math.min(uploadTargetPercent, uploadCurrentPercent + increment);
+            fill.style.width = uploadCurrentPercent + '%';
+            percEl.textContent = Math.floor(uploadCurrentPercent) + '%';
+            
+            if (!uploadServerComplete || officeFrameLoaded) {
+              console.log(`Upload progress animated: ${Math.floor(uploadCurrentPercent)}% (target: ${uploadTargetPercent}%)`);
+            }
+          }
+        }, 150);
+
+        const xhr = new XMLHttpRequest();
+        const p = new Promise((resolve, reject) => {
+          xhr.upload.onprogress = (e) => {
+            if (!e.lengthComputable) return;
+            const loaded = e.loaded;
+            const total = e.total;
+            const percent = Math.round((loaded / total) * 100);
+            
+            // Actualizar objetivo, no directamente la barra
+            uploadTargetPercent = percent;
+            console.log(`Upload server progress: ${percent}% (${loaded}/${total} bytes)`);
+            
+            if (percent >= 100) {
+              uploadServerComplete = true;
+              console.log('Upload server complete, now waiting for Office iframe to load...');
+            }
+            
+            // ETA simple
+            const dt = (Date.now() - startTs) / 1000; // s
+            const rate = loaded / Math.max(dt, 0.1); // bytes/s
+            const remaining = Math.max(total - loaded, 0);
+            const etaSec = rate > 0 ? Math.ceil(remaining / rate) : 0;
+            etaEl.textContent = etaSec ? `~${etaSec}s restantes` : 'Casi listo…';
+            lastLoaded = loaded;
+          };
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4) {
+              try {
+                const data = JSON.parse(xhr.responseText || '{}');
+                if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+                else resolve({ error: data?.error || ("http_" + xhr.status), maxMb: data?.maxMb });
+              } catch {
+                resolve({ error: "bad_json" });
+              }
+            }
+          };
+          xhr.onerror = () => resolve({ error: 'network_error' });
+        });
+        xhr.open('POST', url, true);
+        xhr.send(form);
+        const result = await p;
+        // Detener animador de subida
+        clearInterval(uploadAnimator);
+        // quitar UI de progreso tras 1s
+        setTimeout(() => container.remove(), 1000);
+        return result;
+      } catch (e) {
+        console.error("upload error", e);
+        return { error: "network_error" };
+      }
+    }
+
+    async function copyVisible() {
+      const container = document.getElementById("viewer-content");
+      if (!container) return;
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(container);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      try {
+        const asText = container.innerText;
+        await navigator.clipboard.writeText(asText);
+      } catch {}
+    }
+
+    function unsupported(message) {
+      setViewerContent(`<div style="color:#ffb4a3;">${message}</div>`);
+    }
+
+    async function handleFile(file) {
+      currentFile = file;
+      const name = file.name.toLowerCase();
+      if (name.endsWith(".docx")) return renderDocx(file);
+      if (name.endsWith(".xlsx")) return renderXlsx(file);
+      if (name.endsWith(".doc")) return unsupported(".doc (Word antiguo) no es compatible en modo 100% navegador. Convierte a .docx.");
+      if (name.endsWith(".xls")) return unsupported(".xls (Excel antiguo) tiene soporte limitado. Convierte a .xlsx para mejor resultado.");
+      unsupported("Formato no soportado. Usa .docx o .xlsx.");
+    }
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      if (file) handleFile(file);
+    });
+
+    ;["dragenter","dragover"].forEach(evt => dropzone.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation();
+      dropzone.style.borderColor = "#5aa9ff";
+      dropzone.style.color = "#e6eef9";
+    }));
+    ;["dragleave","drop"].forEach(evt => dropzone.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation();
+      dropzone.style.borderColor = "#294072";
+      dropzone.style.color = "#90a4c7";
+    }));
+    dropzone.addEventListener("drop", e => {
+      const file = e.dataTransfer?.files?.[0];
+      if (file) handleFile(file);
+    });
+
+    // Accesos rápidos
+    document.addEventListener("paste", e => {
+      const item = [...(e.clipboardData?.items || [])].find(i => i.kind === "file");
+      if (item) {
+        const file = item.getAsFile();
+        if (file) handleFile(file);
+      }
+    });
+
+    // Inicializar anuncios después de que la página cargue
+    document.addEventListener('DOMContentLoaded', function() {
+      // Cargar anuncios de AdSense
+      try {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        (adsbygoogle = window.adsbygoogle || []).push({});
+      } catch(e) {
+        console.log('AdSense no disponible');
+      }
+
+      // Track eventos para analytics
+      function trackEvent(action, label) {
+        if (typeof gtag !== 'undefined') {
+          gtag('event', action, {
+            event_category: 'engagement',
+            event_label: label
+          });
+        }
+      }
+
+      // Track uploads
+      const originalHandleFile = window.handleFile;
+      window.handleFile = function(file) {
+        trackEvent('file_upload', file.type);
+        return originalHandleFile(file);
+      };
+    });
+  </script>
+</body>
+</html>

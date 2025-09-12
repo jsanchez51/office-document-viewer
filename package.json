@@ -1,0 +1,27 @@
+{
+  "name": "office-document-viewer",
+  "version": "1.0.0",
+  "description": "Visor de documentos Word y Excel online con memoria temporal",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'Build completed'"
+  },
+  "keywords": ["docx", "xlsx", "viewer", "office", "documents"],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
+
