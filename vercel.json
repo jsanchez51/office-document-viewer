@@ -38,6 +38,11 @@
   ],
   "env": {
     "TTL_MINUTES": "10",
-    "MAX_FILE_MB": "50"
+    "MAX_FILE_MB": "6"
+  },
+  "functions": {
+    "server.js": {
+      "maxDuration": 30
+    }
   }
 }

@@ -13,7 +13,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Configuración
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const TTL_MINUTES = process.env.TTL_MINUTES ? Number(process.env.TTL_MINUTES) : 10; // minutos
-const MAX_FILE_MB = process.env.MAX_FILE_MB ? Number(process.env.MAX_FILE_MB) : 50;
+const MAX_FILE_MB = process.env.MAX_FILE_MB ? Number(process.env.MAX_FILE_MB) : 6;
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || `http://localhost:${PORT}`;
 
 const MAX_BYTES = MAX_FILE_MB * 1024 * 1024;
