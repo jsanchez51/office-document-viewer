@@ -166,8 +166,19 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Servir sitemap.xml
+app.get('/sitemap.xml', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
+});
+
+// Servir robots.txt
+app.get('/robots.txt', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
+});
+
 // Servir estáticos
 app.use(express.static(process.cwd(), { fallthrough: true }));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Limpieza periódica de expirados (cada 2 minutos)
 setInterval(() => {

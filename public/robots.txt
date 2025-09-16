@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /f/
+Disallow: /upload
+Disallow: /progress/
+
+Sitemap: https://office-document-viewer.vercel.app/sitemap.xml
+
+# Permitir indexación de la página principal
+Allow: /$
+
+# Crawl-delay para ser amigable con los bots
+Crawl-delay: 1
