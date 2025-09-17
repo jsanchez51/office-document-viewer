@@ -176,6 +176,12 @@ app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
 });
 
+// Servir ads.txt
+app.get('/ads.txt', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.sendFile(path.join(__dirname, 'public', 'ads.txt'));
+});
+
 // Servir estáticos
 app.use(express.static(process.cwd(), { fallthrough: true }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
